@@ -1,6 +1,6 @@
 # hamiltonian-systems
 
-Code repository accompanying my thesis entitled "Dynamical aspects of Hamiltonian systems: Chaos, stickiness, and recurrence plots.
+Code repository accompanying my doctoral thesis entitled "Dynamical aspects of Hamiltonian systems: Chaos, stickiness, and recurrence plots".
 
 This project contains the code to generate and plot all the data in the thesis.
 
