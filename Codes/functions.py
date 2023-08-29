@@ -407,6 +407,126 @@ def ymean2_vs_k(k: float, N: int, n: int, n_icx: int, n_icy: int, xlims: np.ndar
     ymean2[:] /= (n_icx*n_icy)
     return ymean2
 
+def unc_frac_PS(eps: np.ndarray, num_ic: int, k: float, N: int, x0: float = -np.pi, x1: float = np.pi, y0: float = -np.pi, y1: float = np.pi, threshold: float = 11.25, return_UIC: bool = False) -> np.ndarray:
+    """
+    Calculate the uncertainty fraction for an uncertainty of eps on the phase space.
+
+    Parameters
+    ------------
+    eps : np.ndarray
+        Array containing the uncertainty in the initial condition.
+    num_ic : int
+        Number of initial condtions used in the calculation of the uncertainty fraction.
+    k : float
+        Standard map's nonlinearity parameter.
+    N : int
+        Number of iterations.
+    x0 : float, optional
+        Lower limit for the x variable (default is -pi).
+    x1 : float, optional
+        Upper limit for the x variable (default is pi).
+    y0 : float, optional
+        Lower limit for the y variable (default is -pi).
+    y1 : float, optional
+        Upper limit for the y variable (default is pi).
+    threshold : float, optional
+        Cutoff value for dig to distinguish between chaotic and regular orbits (default is 11.25)
+    return_UIC : boolean, optional
+        If True, the function will also return the uncertain initial conditions as two arrays,
+        one for the x positions e another with the y positions. UIC.shape = (eps.shape[0], num_ic) (default is False).
+    
+    Returns
+    ------------
+    out : np.ndarray
+        The uncertainty fraction as a function of eps.
+    """
+    if return_UIC == False:
+        f = np.zeros(eps.shape[0])
+        for i in range(eps.shape[0]):
+            # Generates the random initial conditions
+            x = np.random.uniform(x0, x1, num_ic)
+            y = np.random.uniform(y0, y1, num_ic)
+            """ Initial condition #1 """
+            xi = x
+            yi = y
+            fs1 = dig(xi, yi, k, N)
+            fs1 = np.where(fs1 >= threshold, 1, 0) # If dig > threshold (regular), fs = 1, else (chaotic) fs = 0.
+            """ Initial condition #2 """
+            xi = x + eps[i]
+            yi = y
+            fs2 = dig(xi, yi, k, N)
+            fs2 = np.where(fs2 >= threshold, 1, 0) # If dig > threshold (regular), fs = 1, else (chaotic) fs = 0.
+            """ Initial condition #3 """
+            xi = x - eps[i]
+            yi = y
+            fs3 = dig(xi, yi, k, N)
+            fs3 = np.where(fs3 >= threshold, 1, 0) # If dig > threshold (regular), fs = 1, else (chaotic) fs = 0.
+            # Obtains the uncertainty fraction
+            f[i] = calc_f(fs1, fs2, fs3)
+        return f
+    else:
+        f = np.zeros(eps.shape[0])
+        UIC_x = np.zeros((eps.shape[0], num_ic))
+        UIC_y = np.zeros((eps.shape[0], num_ic))
+        for i in range(eps.shape[0]):
+            # Generates the random initial conditions
+            x = np.random.uniform(x0, x1, num_ic)
+            y = np.random.uniform(y0, y1, num_ic)
+            UIC_x[i,:] = x
+            UIC_y[i,:] = y
+            """ Initial condition #1 """
+            xi = x
+            yi = y
+            fs1 = dig(xi, yi, k, N)
+            fs1 = np.where(fs1 >= threshold, 1, 0) # If dig > threshold (regular), fs = 1, else (chaotic) fs = 0.
+            """ Initial condition #2 """
+            xi = x + eps[i]
+            yi = y
+            fs2 = dig(xi, yi, k, N)
+            fs2 = np.where(fs2 >= threshold, 1, 0) # If dig > threshold (regular), fs = 1, else (chaotic) fs = 0.
+            """ Initial condition #3 """
+            xi = x - eps[i]
+            yi = y
+            fs3 = dig(xi, yi, k, N)
+            fs3 = np.where(fs3 >= threshold, 1, 0) # If dig > threshold (regular), fs = 1, else (chaotic) fs = 0.
+            # Obtains the uncertainty fraction and the uncertain initial conditions
+            f[i] = calc_f(fs1, fs2, fs3, UIC_x[i], UIC_y[i])
+        return f, UIC_x, UIC_y
+    
+@njit(parallel=True)
+def calc_f(fs1: np.ndarray, fs2: np.ndarray, fs3: np.ndarray, x: np.ndarray = None, y: np.ndarray = None):
+    """
+    Calculate the uncertainty fraction given the result of the original initial condition and the
+    other two perturbed initial contions.
+
+    Parameters
+    ------------
+    fs1, fs2, fs3 : np.ndarray
+        Final state of the original IC and the perturbed ICs
+    x : float, optional
+        x coordinate of the uncertain initial condition. If given, the positions where the IC is not uncertain will be overwrite with the value -100.
+    y : float, optional
+        y coordinate of the uncertain initial condition. If given, the positions where the IC is not uncertain will be overwrite with the value -100.
+    Returns
+    ------------
+    out : float
+        The uncertainty fraction.
+    """
+    num_ic = len(fs1)
+    f = 0
+    if x == None and y == None:
+        for j in range(num_ic):
+            if fs1[j] != fs2[j] or fs1[j] != fs3[j]:
+                f += 1
+    else:
+        for j in range(num_ic):
+            if fs1[j] != fs2[j] or fs1[j] != fs3[j]:
+                f += 1
+            else:
+                x[j] = -100
+                y[j] = -100
+
+    return f/num_ic
 
 @njit
 def white_vertline_distr(recmat: np.ndarray) -> np.ndarray:
