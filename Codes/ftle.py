@@ -2,7 +2,7 @@ import numpy as np
 from functions import *
 
 k = 1.5
-x0 = 3.0
+x0 = -3.0
 y0 = 0.0
 
 N = int(1e10)
