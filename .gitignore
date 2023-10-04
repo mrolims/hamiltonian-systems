@@ -1,3 +1,5 @@
+Apresentacao/
+
 Examples/
 
 Text/chap*
@@ -19,3 +21,5 @@ Text/Figures
 Codes/__pycache__
 Codes/Julia
 Codes/Figures
+
+*.pdf
