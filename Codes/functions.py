@@ -236,7 +236,7 @@ def lyapunov_vs_n(x0: float, y0: float, k: float, N: int) -> np.ndarray:
 
     return lypnv_vs_n
    
-@njit
+#@njit
 def FTLE(x0:float, y0: float, k:float, n: int, Ntot: int) -> np.ndarray:
     """
     Compute the Finite-Time Lyapunov Exponents (FTLE) for a given set of parameters.
@@ -267,7 +267,7 @@ def FTLE(x0:float, y0: float, k:float, n: int, Ntot: int) -> np.ndarray:
     x = x0
     y = y0
     for i in range(N):
-        ftle[i, :], x, y = lyapunov(x, y, k, n)
+        ftle[i, 0], ftle[i, 1], x, y = lyapunov(x, y, k, n)
     
     return ftle
 
