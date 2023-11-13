@@ -15,7 +15,15 @@ Text/*.lot
 Text/*.out
 Text/*.tex
 Text/*.toc
-Text/*.pdf
+Text/ficha*.pdf
+Text/folhaderosto*
+Text/pgto_ficha_catalografica.pdf
+Text/refs.pdf
+Text/termo_aprovacao*.pdf
+Text/tese*.pdf
+Text/thesis_final.pdf
+Text/thesis_revised.pdf
+Text/*.jpeg
 Text/Figures
 
 Codes/__pycache__
